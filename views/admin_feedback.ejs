@@ -1,0 +1,389 @@
+<link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css" rel="stylesheet">
+<link href="stylesheets/check-square.css" rel="stylesheet">
+<link href="stylesheets/basic.css" rel="stylesheet">
+<link href="stylesheets/buttons.css" rel="stylesheet">
+<link href="stylesheets/xinuos-icons.css" rel="stylesheet">
+<script src="/javascripts/basic.js"></script>
+<script src="/javascripts/jquery.simplemodal.js"></script>
+<script>
+    var revisedFiles = new Array();
+    var fileIndex = 0;
+    var quoteFile = null;
+    $(function () {
+        $('#revisedFiles').change(function() {
+            for (var i = 0; i < this.files.length; i++) {
+
+                var file = this.files[i];
+                var name = file.name;
+                var size = file.size;
+                file.arrIndex = fileIndex;
+//                file.setAttribute('arrIndex', String(fileIndex));
+                //            var fileInfo = "<p>" + name + "    (<b>" + size + "</b> bytes)" + type + "</p>";
+                var fileInfo = "<tr id='fileTr" +fileIndex+ "'><td><a href='javascript:void(0)' onclick='delFile(" +fileIndex +
+                        ")'  style='float: left'><i class='glyphicon glyphicon-remove'></i></a></td>" +  "<td><p style='float: left'>" +
+                        name + "    (<b>" + size + "</b> bytes)</p></td></tr>";
+                $('#revisedFilesTable').append(fileInfo);
+                revisedFiles.push(file);
+                fileIndex++;
+            }
+        });
+
+        /*$('#quoteFile').change(function() {
+            for (var i = 0; i < this.files.length; i++) {
+                var file = this.files[i];
+                var name = file.name;
+                var size = file.size;
+                var fileInfo = "<tr id='fileQuoteTr'><td><a href='javascript:void(0)' onclick='delQuoteFile()'" +
+                        "  style='float: left'><i class='glyphicon glyphicon-remove'></i></a></td>" +  "<td><p style='float: left'>" +
+                        name + "    (<b>" + size + "</b> bytes)</p></td></tr>";
+                $('#fileQuoteTr').remove();
+                $('#quoteFileTable').append(fileInfo);
+                quoteFile = file;
+            }
+        });*/
+
+        $("input:radio[name=radioFeedback1]").change(function () {
+            changeStatus();
+        });
+        $("input:radio[name=radioFeedback2]").change(function () {
+            changeStatus();
+        });
+
+        function changeStatus(){
+
+            var feedback1 = $("input[name='radioFeedback1']:checked").val();
+            var feedback2 = $("input[name='radioFeedback2']:checked").val();
+            var feedback = feedback1 > feedback2 ? feedback1 : feedback2;
+//            alert(feedback1 + "========" + feedback2 + "=======" + feedback);
+            if (feedback == 1) {
+                $("#projectStatusP").text('Approve');
+            }else if(feedback ==2){
+                $("#projectStatusP").text('Approve with minor revisions');
+            }else if(feedback == 3) {
+                $("#projectStatusP").text( 'Reject (Major issues)');
+            }else {
+                $("#projectStatusP").text('Approve');
+            }
+
+        }
+
+        $('#submitBtn').click(function(){
+            /*if(quoteFile == null){
+                $("#modalContent").text('Admin must upload quote file.');
+                $("#modalBox").modal('show');
+                return;
+            }*/
+            var formData = new FormData();
+            for (var i = 0; i < revisedFiles.length; i++) {
+                var file = revisedFiles[i];
+                formData.append('reviseFiles', file);
+            }
+
+            //formData.append('quoteFile', quoteFile);
+
+            formData.append('projectName', '<%=project.project_name%>');
+            formData.append('snapName', '<%=snapName%>');
+            formData.append('overallFeedback', $('#overallProjectFeedback').val());
+            formData.append('surfaceFeedback', $('#surfaceProjectFeedback').val());
+            formData.append('moduleFeedback', $('#moduleProjectFeedback').val());
+            formData.append('surfaceEvaluation',$("input[name='radioFeedback1']:checked").val() );
+            formData.append('modulePlacement',  $("input[name='radioFeedback2']:checked").val());
+            formData.append('sketchFabURL', $('#sketchFabURL').val());
+            $.ajax({
+                url: '/admin_feedback_submit?userUID=<%=project.user_uid%>&projectID=<%=project.project_id%>'  ,
+                type: 'POST',
+                data: formData,
+                enctype: 'multipart/form-data',
+                processData: false,
+                contentType: false,
+
+                success: function(data){
+                    if(data == 'OK'){
+                        window.location.href = "show_projects";
+                    }
+                    /*
+                    var redirect = 'admin_feedback';
+                    var form = $('<form action="' + redirect + '" method="post" enctype="application/json" >' +
+                            '<input type="hidden" name="projectID"  value="<%=project.project_id%>">'+
+                            '<input type="hidden" name="projectName"  value="<%=project.project_name%>">'+
+                            '<input type="hidden" name="userUID"  value="<%=project.user_uid%>">'+
+                            '<input type="hidden" name="cadFiles"  value="'+$('#cadFiles').text() + '">'+
+                            '<input type="hidden" name="snapName"  value="<%=snapName%>">'+
+                            '<input type="hidden" name="nascentModules"   value="'+$('#nascentModules').text() + '">'+
+                            '<input type="hidden" name="overallFeedback"  value="' + $('#overallProjectFeedback').val() + '">'+
+                            '<input type="hidden" name="surfaceFeedback"  value="' + $('#surfaceProjectFeedback').val() + '">'+
+                            '<input type="hidden" name="moduleFeedback"  value="' +  $('#moduleProjectFeedback').val() + '">'+
+                            '<input type="hidden" name="surfaceEvaluation"  value="' + $("input[name='radioFeedback1']:checked").val() + '">'+
+                            '<input type="hidden" name="modulePlacement"  value="' + $("input[name='radioFeedback2']:checked").val() + '">'+
+                            '<input type="hidden" name="sketchFabURL"  value="' + $('#sketchFabURL').val() + '">'+
+                            '<input type="hidden" name="uploadFiles"  value=\'' +JSON.stringify( data )+ '\'>'+
+                            '</form>');
+
+                    $('body').append(form);
+                    $(form).submit();*/
+                }
+            });
+
+        });
+
+        $('#cancelBtn').click(function(){
+            window.history.back(-1);
+//            alert($('#overallProjectFeedback').val());
+//            alert($('#surfaceProjectFeedback').val());
+//            alert($('#sketchFabURL').val());
+//            alert($('#moduleProjectFeedback').val());
+        });
+
+        $('#viewPageBtn').click(function(){
+            var url = $('#sketchFabURL').val();
+            if(url.startWith('http')){
+                window.open(url);
+            }else{
+                window.open('http://' + url);
+            }
+
+        });
+
+
+        $("#collapsePanal").on("hide.bs.collapse", function(){
+            $("#collapseIcon").removeClass('glyphicon glyphicon-collapse-up');
+            $("#collapseIcon").addClass('glyphicon glyphicon-collapse-down');
+        });
+        $("#collapsePanal").on("show.bs.collapse", function(){
+            $("#collapseIcon").removeClass('glyphicon glyphicon-collapse-down');
+            $("#collapseIcon").addClass('glyphicon glyphicon-collapse-up');
+        });
+
+    });
+
+    String.prototype.startWith=function(s){
+        if(s==null||s==""||this.length==0||s.length>this.length)
+            return false;
+        if(this.substr(0,s.length)==s)
+            return true;
+        else
+            return false;
+        return true;
+    }
+
+    function delFile(index){
+        $('#fileTr' + index).remove();
+        for (var i = 0; i < revisedFiles.length; i++) {
+            if (revisedFiles[i].arrIndex == index){
+                revisedFiles.splice(i,  1);
+            }
+        }
+    }
+    /*function delQuoteFile(){
+        $('#fileQuoteTr').remove();
+        quoteFile = null;
+    }*/
+    function downloadCadFile(owner, fileDir, fileName){
+        var save = document.createElement('a');
+        var dir = owner == 1? "" : "admin/";
+        save.href = dir + fileDir + "/" + fileName;
+        save.target = '_blank';
+        save.download = fileName||'unknown';
+        var event = document.createEvent('MouseEvents');
+        event.initEvent('click', true, true);
+        save.dispatchEvent(event);
+        (window.URL || window.webkitURL).revokeObjectURL(save.href);
+    }
+
+</script>
+
+<div class="control-group">
+    <div class="row" >
+        <div class="col-lg-6 col-md-6 col-xs-6" style="padding-right: 40px">
+            <strong style="color:Silver;font-size: xx-large;">Admin Feedback Panel</strong>
+            <br><br><br>
+            <div>
+                <p class="project-title"><B>Project Name:</B><p class="project-value"><%=project.project_name%></p></p>
+            </div>
+            <br><br>
+            <div>
+                <p class="project-title"><a data-toggle="collapse" href="#collapsePanal" style="color:silver">
+                <span id="collapseIcon" class="glyphicon glyphicon-collapse-down" ></span>
+                    <B>History of CAD files (click to expand or collapse)</B></a>
+                </p>
+                <div id="collapsePanal" class="panel-collapse collapse">
+                    <%
+                    var cur, prev;
+                    for(var i=0;i<uploadFiles.length;i++){
+                        cur = uploadFiles[i];
+//                        next = uploadFiles[i];
+//                        prev = uploadFiles[i];
+                        if(i == 0){%>
+                            <p class="cadhistoryp">User submitted on <%=cur.upload_time%>:</p>
+                            <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                                cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                        <%}else{
+                            prev = uploadFiles[i-1];
+                            if(cur.upload_mills != prev.upload_mills){
+                                if(cur.owner == 1){%>
+                                    <p class="cadhistoryp">User submitted on <%=cur.upload_time%>:</p>
+                                    <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                                    cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                                <%}else {%>
+                                    <p class="cadhistoryp">Admin submitted on <%=cur.upload_time%>:</p>
+                                    <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                                    cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                                <%}%>
+
+                            <%}else{%>
+                                <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                                cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                            <%}
+                        }
+                    }%>
+                </div>
+            </div>
+            <br><br>
+            <div>
+                <p class="project-title"><B>Recommended SNAP: </B><p class="project-value"><%=snapName%></p></p>
+            </div>
+            <br><br>
+            <div>
+                <p class="project-title"><B>Modules:</B>
+                <p id="nascentModules" class="project-value">
+                    <%for(var i=0;i<nascents.length;i++){%>
+                        <%=nascents[i].nascent_name%>, &nbsp;
+                    <%}%>
+                </p>
+                </p>
+            </div>
+            <br><br>
+        </div>
+
+        <div class="col-lg-6 col-md-6 col-xs-6" style="position: relative;height: 600px;padding-left: 40px">
+            <div>
+                <p class="project-title"><B>Project Status:</B><p id="projectStatusP" class="project-value">
+                    <%var feedback = project.surface_feedback > project.module_feedback ? project.surface_feedback: project.module_feedback ;
+                        switch (feedback){
+                            case 1:%>
+                                Approve
+                                <%break;
+                            case 2:%>
+                                Approve with minor revisions
+                                <%break;
+                            case 3:%>
+                                Reject (Major issues)
+                                <%break;
+                            default:%>
+                                Approve
+                                <%break;
+                        }
+                    %></p>
+                </p>
+            </div>
+            <div style="position:absolute;bottom:5px;width:100%">
+                <p class="project-value">Overall Project Feedback</p>
+                <textarea id="overallProjectFeedback" class="form-control project-feedback" rows="8"
+                          placeholder="Click to enter any general feedback on this project."><%=project.overall_feedback_info%></textarea>
+            </div>
+        </div>
+    </div>
+    <legend style="margin-top: 40px;margin-bottom: 40px"></legend>
+    <div class="row" >
+        <div class="col-lg-6 col-md-6 col-xs-6" style="padding-right: 40px">
+            <div>
+                <p class="project-title"><B>Surface Evaluation</B></p>
+            </div>
+            <div class="btn-group btn-group-vertical" data-toggle="buttons">
+                <label class="btn active">
+                    <input type="radio" name='radioFeedback1' value="1" <%if(project.surface_feedback != 2 && project.surface_feedback != 3){%> checked <%}%>><i class="fa fa-circle-o fa-2x"></i><i class="fa fa-dot-circle-o fa-2x"></i> <span style="font-size: 1.5em;margin-left: 10px">Approve</span>
+                </label>
+                <label class="btn">
+                    <input type="radio" name='radioFeedback1' value="2" <%if(project.surface_feedback == 2){%> checked <%}%>><i class="fa fa-circle-o fa-2x"></i><i class="fa fa-dot-circle-o fa-2x"></i><span style="font-size: 1.5em;margin-left: 10px">Approve with minor revisions</span>
+                </label>
+                <label class="btn">
+                    <input type="radio" name='radioFeedback1' value="3" <%if(project.surface_feedback == 3){%> checked <%}%>><i class="fa fa-circle-o fa-2x"></i><i class="fa fa-dot-circle-o fa-2x"></i><span style="font-size: 1.5em;margin-left: 10px">Reject (Major issues)</span>
+                </label>
+            </div>
+            <br><br><br>
+            <div>
+                <p class="project-value">Surface Evaluation Feedback</p>
+                <textarea id="surfaceProjectFeedback" class="form-control project-feedback" rows="8"
+                          placeholder="Click to enter surface evaluation feedback. Is the product printable as-is? If not, what changes would need to be made?"><%=project.surface_feedback_info%></textarea>
+            </div>
+            <br><br><br>
+            <div >
+                <p class="project-value" >SketchFab Viewport URL</p>
+                <table style="width: 100%">
+                <tr>
+                    <td style="width: 80%">
+                        <input id="sketchFabURL" class="form-control project-feedback" type="text"
+                              placeholder="PegaBoom Speaker" value="<%=project.sketch_url%>">
+                    </td>
+                    <td style="width: 3px"></td>
+                    <td style="width: 17%" >
+                        <button type="button" id="viewPageBtn" class="btn btn-info" style="margin-bottom: -15px">View Page</button>
+                    </td>
+                </tr>
+                </table>
+            </div>
+            <br><br>
+        </div>
+        <div class="col-lg-6 col-md-6 col-xs-6" style="padding-left: 40px">
+            <div>
+                <p class="project-title"><B>Module Placement</B></p>
+            </div>
+            <div class="btn-group btn-group-vertical" data-toggle="buttons">
+                <label class="btn active">
+                    <input type="radio" name='radioFeedback2' value="1" <%if(project.module_feedback != 2 && project.module_feedback != 3){%> checked <%}%>><i class="fa fa-circle-o fa-2x"></i><i class="fa fa-dot-circle-o fa-2x"></i> <span style="font-size: 1.5em;margin-left: 10px">Approve</span>
+                </label>
+                <label class="btn">
+                    <input type="radio" name='radioFeedback2' value="2" <%if(project.module_feedback == 2){%> checked <%}%>><i class="fa fa-circle-o fa-2x"></i><i class="fa fa-dot-circle-o fa-2x"></i><span style="font-size: 1.5em;margin-left: 10px">Approve with minor revisions</span>
+                </label>
+                <label class="btn">
+                    <input type="radio" name='radioFeedback2' value="3"<%if(project.module_feedback == 3){%> checked <%}%>><i class="fa fa-circle-o fa-2x"></i><i class="fa fa-dot-circle-o fa-2x"></i><span style="font-size: 1.5em;margin-left: 10px">Reject (Major issues)</span>
+                </label>
+            </div>
+            <br><br><br>
+            <div>
+                <p class="project-value">Module Placement Feedback</p>
+                <textarea id="moduleProjectFeedback" class="form-control project-feedback" rows="8"
+                          placeholder="Click to enter module placement feedback. Is the product routable as-is? If not, what changes would need to be made?"><%=project.module_feedback_info%></textarea>
+            </div>
+            <br><br><br>
+            <div>
+                <p class="project-value">Upload Revised / Annotated CAD (if any)</p>
+                <div style="margin-top: 20px">
+                    <input type="file" class="filestyle" multiple
+                           id="revisedFiles" name="revisedFiles" data-buttonText="Browse" accept=".stp, .sldasm, .sldprt"/>
+                    <table id="revisedFilesTable">
+
+                    </table>
+                </div>
+            </div>
+            <br><br><br>
+            <!--<div>-->
+                <!--<p class="project-value">Upload Quote</p>-->
+                <!--<div style="margin-top: 20px">-->
+                    <!--<input type="file" class="filestyle"   accept=".csv"-->
+                           <!--id="quoteFile" name="quoteFile" data-buttonText="Browse" />-->
+                    <!--<table id="quoteFileTable">-->
+
+                    <!--</table>-->
+                <!--</div>-->
+            <!--</div>-->
+
+            <br><br>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="basic-modal-content standard-container" id="modalBox">
+    <h3>Error</h3>
+
+    <p id="modalContent" style="margin-top: 10px"></p>
+    <a href="#" title="Close" class="button primary modalCloseImg simplemodal-close">ok</a>
+    <a href="#" title="Close" class= "modalCloseImg simplemodal-close x-close icon-close ic"></a>
+</div>
+
+<legend style="margin-top: 40px"></legend>
+<div style="margin:0px auto;text-align: center;width:550px; margin-top: 80px;">
+    <button class="btn btn-default btn-lg" id="cancelBtn" name="cancelBtn" style="width: 200px;margin-right: 50px">Cancel</button>
+    <button class="btn btn-default btn-lg" id="submitBtn" name="submitBtn" style="width: 200px">Submit</button>
+</div>

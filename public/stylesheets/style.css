@@ -1,0 +1,276 @@
+html,
+body {
+  padding: 40px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  height: 90%;
+  padding-top: 60px;
+  padding-bottom: 40px;
+}
+
+.navbar-custom {
+  border-color: transparent;
+  margin-bottom: 0px;
+  background-color:transparent;
+  background:transparent;
+  border-top: transparent;
+  border-bottom-color: transparent;
+}
+.form-control-feedback{
+  right:20px;
+}
+.panel-clr{
+
+}
+.thumbnail-custom{
+  border-color: red;
+}
+.thumbnail>.img-container>.img-rounded{
+  max-height: 100%;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+}
+.img-container{
+  margin:10px;
+  height: 140px;
+  text-align: center;
+  background-color:Silver;
+  border-radius: 10px;
+  text-align: center;
+  position: relative;
+}
+.panel-font-color{
+  color:Silver;
+}
+
+#container {
+  min-height: 100%;
+  height: auto !important;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto -160px;/*margin-bottom的负值等于footer高度*/
+}
+.push,
+#footer {
+  height: 160px;
+  clear:both;
+}
+/*==========其他div效果==========*/
+#header {
+  padding: 0px;
+  background: lime;
+}
+#left {
+  width: 5%;
+  float: left;
+  margin-right: 0%;
+  background: orange;
+}
+#content{
+  width: 100%;
+  float: left;
+  margin-right: 0%;
+  background: green;
+}
+#right {
+  width: 5%;
+  float: left;
+  background: yellow;
+}
+#footer {
+
+}
+
+
+.progressbar_container {
+  width: 100%;
+  margin: 50px auto;
+}
+
+.progressbar {
+  margin: 0;
+  padding: 0;
+  counter-reset: step;
+  border-color: transparent;
+}
+.progressbar li {
+  list-style-type: none;
+  width: 160px;
+  float: left;
+  font-size: 16px;
+  position: relative;
+  text-align: center;
+
+  /*text-transform: uppercase;*/
+  color: #7d7d7d;
+}
+.progressbar li:before {
+  width: 30px;
+  height: 30px;
+  content: counter(step);
+  counter-increment: step;
+  line-height: 30px;
+  border: 2px solid #7d7d7d;
+  display: block;
+  text-align: center;
+  margin: 0 auto 10px auto;
+  border-radius: 50%;
+  background-color: white;
+}
+.progressbar li:after {
+  width: 100%;
+  height: 2px;
+  content: '';
+  position: absolute;
+  background-color: #7d7d7d;
+  top: 15px;
+  left: -50%;
+  z-index: -1;
+}
+.progressbar li:first-child:after {
+  content: none;
+}
+.progressbar li.active {
+  color: green;
+}
+.progressbar li.active:before {
+  border-color: #55b776;
+}
+.progressbar li.active + li:after {
+  background-color: #55b776;
+}
+
+.project-title{
+  font-size: x-large;
+  color:Silver;
+  display:inline;
+}
+.project-value{
+  font-size: x-large;
+  color: #bbbbbb;
+  display:inline;
+  margin-left: 5px;
+}
+.project-feedback{
+  border-radius: 20px;
+  resize:none;
+  margin-top: 15px;
+  font-size: large;
+}
+.preview-feedback{
+  margin-top: 20px;
+  color:Silver;
+  font-size: x-large;
+}
+.iframe-style{
+  border-radius: 20px;
+  border-width: 1px;
+  height: 500px;
+  padding: 20px;
+  box-shadow:2px 2px 1px #AAA;
+  -moz-box-shadow:2px 2px 1px #AAA;
+  -webkit-box-shadow:2px 2px 1px #AAA;
+}
+.div-rectangle-shadow{
+  border-radius: 20px;
+  border-width: 1px;
+
+  padding: 20px;
+  border: 1px solid #AAA;
+  box-shadow:2px 2px 1px #AAA;
+  -moz-box-shadow:2px 2px 1px #AAA;
+  -webkit-box-shadow:2px 2px 1px #AAA;
+}
+.cadhistoryp{
+  color: silver;
+  font-size: medium;
+  margin-top: 10px;
+}
+.cadhistorya{
+
+  font-size: medium;
+  display: block;
+  margin-left: 40px;
+}
+
+.file-upload {
+  position: relative;
+  overflow: hidden;
+  margin: 10px; }
+
+.file-upload input.file-input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0;
+  filter: alpha(opacity=0);
+}
+
+.panel-rectangle{
+  border-radius: 20px;
+  border-width: 1px;
+  border: 1px solid silver;
+  padding: 20px;
+}
+.tab-pane{
+  height:200px;
+  overflow-y:scroll;
+}
+.list-group-item-noborder{
+  border-color: transparent;
+}
+.list-group-item-selected{
+  background-color: silver;
+}
+.list-group-item-noborder:hover{
+  background-color: silver;
+}
+.div-tag{
+  border-radius: 20px;
+  border-width: 1px;
+  background-color:silver;
+  margin: 5px;
+  padding: 5px;
+  padding-left: 20px;
+  padding-right: 20px;
+  display: inline-block;
+}
+.span-tag{
+  color:white;
+  font-size: large;
+  margin-left: 10px;
+}
+.div-selected{
+  width: 100%;
+  color: white;
+  text-align: center;
+  line-height: 100px;
+  background-color:silver ;
+  border: 1px solid silver;
+  border-color: silver;
+}
+.div-unselected{
+  width: 100%;
+  color:silver;
+  text-align: center;
+  line-height: 100px;
+  background-color: white;
+  border: 1px solid silver;
+  border-color: silver;
+}
+
+
+
+
+
+

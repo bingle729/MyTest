@@ -1,0 +1,106 @@
+<script type="text/javascript">
+    $(function() {
+        initTable();
+        function initTable(){
+            var queryUrl = '/getUserProjects' + '?rnd=' + +Math.random();
+            $table = $('#projectsTable').bootstrapTable({
+               method:'post',
+                url:queryUrl,
+//                height: $(window).height() - 200,
+                striped: true,
+                pagination: true,
+                pageSize: 10,
+//                pageList: [5, 25, 50, 100],
+                search: true,
+                sidePagination: "client",
+                showColumns: true,
+                minimumCountColumns: 2,
+                columns: [
+                    {
+                        field : 'Number',
+                        title : 'Number',
+                        align: 'center',
+                        width:50,
+                        formatter : function(value, row, index) {
+                            return index + 1;
+                        }
+                    },{
+                    field: 'project_name',
+                    title: 'Project Name',
+                    width: 100,
+                    align: 'center',
+                    valign: 'middle',
+                    sortable: true,
+                }, {
+                    field: 'user_name',
+                    title: 'User Name',
+                    align: 'middle',
+                    valign: 'top',
+                    sortable: true
+                }, {
+                    field : 'surface_feedback',
+                    title : 'Surface Evaluation',
+                    align: 'center',
+                    formatter : function(value, row, index) {
+                        switch(value){
+                            case 1:
+                                return "Approve";
+                                break;
+                            case 2:
+                                    return "Approve with minor revisions";
+                                break;
+                            case 3:
+                                return "Reject (Major issues)";
+                                break;
+                            default:
+                                return "Submitted";
+                        }
+//                        return index + 1;
+                    }
+                },{
+                    field : 'module_feedback',
+                    title : 'Module Placement',
+                    align: 'center',
+                    formatter : function(value, row, index) {
+                        switch(value){
+                            case 1:
+                                return "Approve";
+                                break;
+                            case 2:
+                                return "Approve with minor revisions";
+                                break;
+                            case 3:
+                                return "Reject (Major issues)";
+                                break;
+                            default:
+                                return "Submitted";
+                        }
+                    }
+                },{
+                    field: 'update_time',
+                    title: 'Update Time',
+                    align: 'left',
+                    valign: 'top',
+                    sortable: true
+                }],
+                formatLoadingMessage: function () {
+                    return "Loading...";
+                },
+                formatNoMatches: function () {  //没有匹配的结果
+                    return 'No matching records found';
+                },
+                onLoadError: function (data) {
+                    $('#projectsTable').bootstrapTable('removeAll');
+                },
+                onClickRow: function (row) {
+                    window.location.href = "/recieved_feedback?projectID=" + row.project_id;
+
+                },
+
+            });
+        }
+    });
+</script>
+<table id="projectsTable" class="display" cellspacing="0" width="100%">
+
+</table>

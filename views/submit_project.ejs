@@ -1,0 +1,299 @@
+<link href="stylesheets/basic.css" rel="stylesheet">
+<link href="stylesheets/buttons.css" rel="stylesheet">
+<link href="stylesheets/xinuos-icons.css" rel="stylesheet">
+<script src="/javascripts/basic.js"></script>
+<script src="/javascripts/jquery.simplemodal.js"></script>
+<script>
+    var projectFiles = new Array();
+    var fileIndex = 0;
+    $(function () {
+
+//        $('.btn').click(function(){
+//            var projectName = $('#projectName').val();
+//            if(!projectName){
+//                alert('Input a Project Name to Get Started.');
+//                return;
+//            }
+//            var selID = $('div.thumbnail-custom').attr("id");
+//            if(!selID){
+//                alert('Select a SNAP Function to Get Started.');
+//                return;
+//            }
+//            var redirect = 'nascent_modules';
+//            var form = $('<form action="' + redirect + '" method="post">' +
+//                    '<input type="hidden" name="projectName"  value="'+projectName+'"/>' +
+//                    '<input type="hidden" name="snap_id"  value="'+selID+'"/></form>');
+//            $('body').append(form);
+//            $(form).submit();
+//        });
+
+        $('input[type=file]').change(function() {
+
+            for (var i = 0; i < this.files.length; i++) {
+
+                var file = this.files[i];
+                var name = file.name;
+                var size = file.size;
+                file.arrIndex = fileIndex;
+//                file.setAttribute('arrIndex', String(fileIndex));
+    //            var fileInfo = "<p>" + name + "    (<b>" + size + "</b> bytes)" + type + "</p>";
+                var fileInfo = "<tr id='fileTr" +fileIndex+ "'><td><a href='javascript:void(0)' onclick='delFile(" +fileIndex +
+                        ")'  style='float: left'><i class='glyphicon glyphicon-remove'></i></a></td>" +  "<td><p style='float: left'>" +
+                        name + "    (<b>" + size + "</b> bytes)</p></td></tr>";
+                $('#filesTable').append(fileInfo);
+                projectFiles.push(file);
+                fileIndex++;
+            }
+        });
+        $('#btnOK').click(function(){
+            createSuccess();
+        });
+        $('#iconOK').click(function(){
+            createSuccess();
+        });
+        $('#cancelBtn').click(function(){
+            window.history.back(-1);
+        });
+        $('#submitBtn').click(function() {
+            if($('#projectName').val().length == 0){
+                $("#modalContent").text('You must input project name.');
+                $("#modalError").modal('show');
+                return;
+            }
+            if (projectFiles.length == 0) {
+                $("#modalContent").text('You must select CAD files to upload.');
+                $("#modalError").modal('show');
+                return;
+            }
+            if('<%=projectID%>' == 0){//new project
+                //step 1: verify project name
+                //step 2: upload files
+                //step 3: save project
+                $.ajax({
+                    url:'verifyProjectName',
+                    type:'POST',
+                    data:{projectName: $('#projectName').val()},
+                    success:function(data){
+                        var code = data.msgCode;
+                        var msg = data.msgContent;
+                        if(code ==1 ){
+                            $("#modalContent").text('Duplicate project name, you must input another project name.');
+                            $("#modalError").modal('show');
+                        }else {
+                            //create a project
+                            createProject();
+//                        uploadFiles(msg);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+//                    $('#userhint').text( error.message);
+                    },
+                });
+            }else{//upload project
+                uploadFiles('<%=projectID%>', true);
+            }
+
+
+        });
+        function uploadFiles(projectID, changeStatus){
+            if(projectFiles.length == 0)
+                return;
+
+            var formData = new FormData();
+            for (var i = 0; i < projectFiles.length; i++) {
+         //                alert(projectFiles[i].path + "==" + projectFiles[i].name);
+                var file = projectFiles[i];
+                formData.append('uploads[]', file);
+            }
+//            formData.append('projectID', projectID);
+             $.ajax({
+             url: '/uploadProjectFiles?projectID='+projectID+ "&changeStatus="+changeStatus,
+             type: 'POST',
+             data: formData,
+             processData: false,
+             contentType: false,
+             success: function(data){
+                 $("#modalSuccessContent").text('The project has been successfully submitted.  You can start a new project now.');
+                 $("#modalSuccess").modal('show');
+//
+             }
+            });
+        }
+
+
+
+        function createProject(){
+            $.ajax({
+                url: '/submit_project',
+                type: 'POST',
+                data: {
+                    'projectName':$('#projectName').val(),
+                    'snapID':"<%=snapID%>",
+                    'projectDesc':$('#projectDesc').val()
+                    },
+                success: function(data){
+                    var code = data.msgCode;
+                    var content = data.msgContent;
+                    if(code == 1){
+//                        alert(content);
+                        uploadFiles(content, false);
+                    }
+
+                }
+            });
+            /*var redirect = 'submit_project';
+            //                        var form = $('<form action="' + redirect + '" method="post">' +
+            //                                '<input type="hidden" name="searchText"  value="'+searchText+'"/></form>');
+            var form = $('<form action="' + redirect + '" method="post">'+
+                    '<input type="hidden" name="projectName"  value="'+$('#projectName').val()+'"/>'+
+                    '<input type="hidden" name="snapID"  value="<%=snapID%>"/>'+
+                    '<input type="hidden" name="projectVersion"  value="'+$('#projectVersion').val()+'"/>'+
+                    '<input type="hidden" name="projectID"  value="'+projectID+'"/>'+
+                    '<input type="hidden" name="projectFileNames"  value="'+formData+'"/>'+
+                    '<input type="hidden" name="projectDesc"  value="'+$('#projectDesc').val()+'"/></form>');
+
+            $('body').append(form);
+            $(form).submit();*/
+        }
+        $("#collapsePanal").on("hide.bs.collapse", function(){
+            $("#collapseIcon").removeClass('glyphicon glyphicon-collapse-up');
+            $("#collapseIcon").addClass('glyphicon glyphicon-collapse-down');
+        });
+        $("#collapsePanal").on("show.bs.collapse", function(){
+            $("#collapseIcon").removeClass('glyphicon glyphicon-collapse-down');
+            $("#collapseIcon").addClass('glyphicon glyphicon-collapse-up');
+        });
+    });
+    function createSuccess(){
+        window.location.href = "show_projects";
+    }
+    function delFile(index){
+        $('#fileTr' + index).remove();
+        for (var i = 0; i < projectFiles.length; i++) {
+            if (projectFiles[i].arrIndex == index){
+                projectFiles.splice(i,  1);
+            }
+        }
+    }
+    function downloadCadFile(owner, fileDir, fileName){
+        var save = document.createElement('a');
+        var dir = owner == 1? "" : "admin/";
+        save.href = dir + fileDir + "/" + fileName;
+        save.target = '_blank';
+        save.download = fileName||'unknown';
+        var event = document.createEvent('MouseEvents');
+        event.initEvent('click', true, true);
+        save.dispatchEvent(event);
+        (window.URL || window.webkitURL).revokeObjectURL(save.href);
+    }
+</script>
+
+<br>
+<div>
+    <strong style="color:Silver;font-size: xx-large;">Submit Your Project for Review</strong>
+    <a style="color:Silver;font-size:x-large;float: right;" href="#">Need help getting started?</a>
+</div>
+
+<div class="progressbar_container">
+    <ul class="progressbar">
+        <li class="active">Setup Project</li>
+        <li class="active">Download CAD Kit</li>
+        <li class="active">Submit Your Project</li>
+        <li>Review Feedback</li>
+        <li>Order Units</li>
+        <li>Sell Your Product</li>
+        <li>View Sales Stats</li>
+    </ul>
+</div>
+
+<div class="control-group">
+    <div class="row">
+        <div class="col-xs-6 col-lg-6 col-md-6">
+            <div>
+                <label for="name" style="color:Silver;font-size: large">Project Name</label>
+                <input type="text" class="form-control input-lg" id="projectName" name="projectName"
+                       placeholder="Suggestion: include version in project name, i.e. LED bear 1.0.1"
+                       value="<%=projectName%>" <%if(projectID != 0){%>disabled <%}%>
+                >
+            </div>
+            <br/><br/><br/>
+            <div>
+                <label for="name" style="color:Silver;font-size: large">Description</label>
+                <textarea  class="form-control input-lg" id="projectDesc" name="projectDesc" rows="6" style="resize:none;"
+                           placeholder="Click to enter your product’s description here."
+                ><%=projectDesc%></textarea>
+            </div>
+            <br/><br/><br/>
+            <div>
+                <p class="project-title"><a data-toggle="collapse" href="#collapsePanal" style="color:silver">
+                        <span id="collapseIcon" class="glyphicon glyphicon-collapse-down" ></span>
+                        <B>History of CAD files (click to expand or collapse)</B></a>
+                </p>
+                <div id="collapsePanal" class="panel-collapse collapse">
+                    <%
+                    var cur, prev;
+                    for(var i=0;i<uploadFiles.length;i++){
+                        cur = uploadFiles[i];
+//                        next = uploadFiles[i];
+//                        prev = uploadFiles[i];
+                    if(i == 0){%>
+                    <p class="cadhistoryp">I submitted on <%=cur.upload_time%>:</p>
+                    <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                    cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                    <%}else{
+                        prev = uploadFiles[i-1];
+                    if(cur.upload_mills != prev.upload_mills){
+                    if(cur.owner == 1){%>
+                    <p class="cadhistoryp">I submitted on <%=cur.upload_time%>:</p>
+                    <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                    cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                    <%}else {%>
+                    <p class="cadhistoryp">Admin submitted on <%=cur.upload_time%>:</p>
+                    <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                    cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                    <%}%>
+
+                    <%}else{%>
+                    <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                    cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                    <%}
+                    }
+                    }%>
+                </div>
+            </div>
+            <br/><br/><br/>
+            <div class="form-group">
+                <label for="name" style="color:Silver;font-size: large">Upload CAD with Modules (.stp, .sldprt, .sldasm only)</label>
+                <input type="file" class="filestyle form-control input-lg" multiple data-icon="false"
+                       id="projectFile" name="projectFile" data-buttonText="Browse" accept=".stp, .sldasm, .sldprt"/>
+                <table id="filesTable">
+
+                </table>
+            </div>
+        </div>
+        <div class="col-xs-4 col-lg-4 col-md-4">
+
+        </div>
+    </div>
+</div>
+<!-- Error Modal -->
+<div class="basic-modal-content standard-container" id="modalError">
+    <h3>Error</h3>
+
+    <p id="modalContent" style="margin-top: 10px"></p>
+    <a href="#" title="Close" class="button primary modalCloseImg simplemodal-close">ok</a>
+    <a href="#" title="Close" class= "modalCloseImg simplemodal-close x-close icon-close ic"></a>
+</div>
+<!-- Sucess Modal-->
+<div class="basic-modal-content standard-container" id="modalSuccess">
+    <h3 style="color: #00ee00">Success</h3>
+
+    <p id="modalSuccessContent" style="margin-top: 10px"></p>
+    <a href="#" title="Close" id="btnOK" onclick="modalSuccess();" class="button primary modalCloseImg simplemodal-close">ok</a>
+    <a href="#" title="Close" id="iconOK" onclick="modalSuccess();" class= "modalCloseImg simplemodal-close x-close icon-close ic"></a>
+</div>
+
+<div style="margin:0px auto;text-align: center;width:550px; margin-top: 80px;">
+    <button class="btn btn-default btn-lg" id="cancelBtn" name="cancelBtn" style="width: 200px;margin-right: 50px">Cancel</button>
+    <button class="btn btn-default btn-lg" id="submitBtn" name="submitBtn" style="width: 200px">Submit</button>
+</div>

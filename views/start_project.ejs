@@ -1,0 +1,146 @@
+<link href="stylesheets/basic.css" rel="stylesheet">
+<link href="stylesheets/buttons.css" rel="stylesheet">
+<link href="stylesheets/xinuos-icons.css" rel="stylesheet">
+<script src="/javascripts/basic.js"></script>
+<script src="/javascripts/jquery.simplemodal.js"></script>
+<script>
+        $(function () {
+
+            $('.thumbnail').click(function () {
+                $('div.thumbnail-custom').removeClass('thumbnail-custom');
+                $(this).addClass('thumbnail-custom');
+            });
+
+            $('.btn').click(function(){
+                var user = "<%=user%>";
+                if(!user){
+                    $("#modalContent").text('Log in first please!');
+                    $("#modalBox").modal('show');
+                    return;
+                }
+
+                var selID = $('div.thumbnail-custom').attr("id");
+                if(!selID){
+                    $("#modalContent").text('Select a SNAP Function to Get Started.');
+                    $("#modalBox").modal('show');
+                    return;
+                }
+                var redirect = 'nascent_modules';
+                var form = $('<form action="' + redirect + '" method="get">' +
+                                '<input type="hidden" name="snapID"  value="'+selID+'"/></form>');
+                $('body').append(form);
+                $(form).submit();
+            });
+            $('#searchSnap').keypress(function(event) {
+                if(event.keyCode == "13"){
+                    var searchText = $('#searchSnap').val();
+                    var redirect = 'snap_search';
+                    var form = $('<form action="' + redirect + '" method="post">' +
+                            '<input type="hidden" name="searchText"  value="'+searchText+'"/></form>');
+                    $('body').append(form);
+                    $(form).submit();
+                }
+            });
+        })
+
+</script>
+<br>
+<div>
+  <strong style="color:Silver;font-size: xx-large;">Start a New Project</strong>
+  <a style="color:Silver;font-size:x-large;float: right;" href="#">Need help getting started?</a>
+</div>
+
+<div class="progressbar_container">
+    <ul class="progressbar">
+        <li class="active">Setup Project</li>
+        <li>Download CAD Kit</li>
+        <li>Submit Your Project</li>
+        <li>Review Feedback</li>
+        <li>Order Units</li>
+        <li>Sell Your Product</li>
+        <li>View Sales Stats</li>
+    </ul>
+</div>
+
+<br/>
+
+
+<div class="form-horizontal" style="margin-top: 50px;">
+    <!--div class="control-group form-group-lg">
+        <h4><smal class="col-lg-4 control-label">Select a SNAP Function to Get Started</smal></h4>
+        <div class="row">
+            <div class="input-group col-lg-8">
+                <span class="input-group-addon"><span class="glyphicon glyphicon-search "></span></span>
+                <input type="text" class="form-control" id="searchSnap" name="searchSnap" placeholder="Search SNAPs" autofocus>
+            </div>
+        </div>
+        <div class="input-group col-sm-3">
+            <a class="col-lg-4 control-label" style="color:grey;font-size:x-large;float: right;" href="#">What’s a SNAP?</a></div>
+
+    </div-->
+    <div class="control-group">
+        <h4><smal class="col-lg-4 control-label help-block" style="color:Silver;" >Select a SNAP Function to Get Started</smal></h4>
+        <div class="row">
+            <div class="col-lg-3">
+                <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                <input type="text" class="form-control" id="searchSnap" name="searchSnap" placeholder="Search SNAPs" value="<%=searchText%>"/>
+
+            </div>
+            <a class="col-xs help-block" style="color:Silver;font-size:large;float: right;" href="#">What’s a SNAP?</a>
+        </div>
+    </div>
+</div>
+
+<div style="margin-top: 40px">
+
+    <%for(var i = 0;i<snaps.length;i++){
+        if(i % 4 == 0){%>
+            <div class="panel panel-default" style="border: none" >
+                <div class="panel-body" style="border-color:transparent">
+                    <div class="row">
+        <%}%>
+
+                <div class="col-sm-3 col-md-3 col-lg-3">
+                    <div class="thumbnail" id="<%=snaps[i].snap_id%>" style="min-height: 400px">
+                        <div class="img-container" >
+                            <img class="img-rounded" src="<%=snaps[i].snap_image%>"   >
+                        </div>
+
+                        <div class="caption">
+                            <h2 class="panel-font-color"><%=snaps[i].snap_name%></h2>
+                            <p class="panel-font-color"><%=snaps[i].snap_desc%></p>
+                            <h2 class="panel-font-color" style="font-size: large">
+                                <%if(snaps[i].isna == 1){%>
+                                N/A
+                                <%}else if(snaps[i].isfree==1){%>
+                                Free
+                                <%}else{%>
+                                + $<%=snaps[i].snap_price%>
+                                <%}%>
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+                <%if(i == snaps.length-1 ||(i+1)%4 ==0 ){%>
+                    </div>
+                </div>
+
+            </div>
+    <%}%>
+    <%}%>
+
+</div>
+
+<!-- Modal -->
+<div class="basic-modal-content standard-container" id="modalBox">
+    <h3>Error</h3>
+
+    <p id="modalContent" style="margin-top: 10px"></p>
+    <a href="#" title="Close" class="button primary modalCloseImg simplemodal-close">ok</a>
+    <a href="#" title="Close" class= "modalCloseImg simplemodal-close x-close icon-close ic"></a>
+</div>
+
+<div style="margin:0px auto;text-align: center;width:250px; margin-top: 40px;">
+    <button class="btn btn-default btn-lg btn-block" style="width: 200px">Next</button>
+</div>
+

@@ -1,0 +1,433 @@
+<script xmlns="http://www.w3.org/1999/html" >
+    $(function () {
+        $("[data-toggle='popover']").popover();
+
+        $('#checkBtn').click(function(){
+            var selPegaBooms =  $.createPegaBoomJsonFromTable();
+            var selModules = $.createModuleJsonFromTable();
+            var selBoards = $.createBoardJsonFromTable();
+            if(selPegaBooms.length == 1 && selModules.length == 1 && selBoards.length == 1){
+                return;
+            }
+
+            var redirect = '/orders/order_units_submit';
+            var form = $('<form action="' + redirect + '" method="post">' +
+                    '<input type="hidden" name="projectID"  value=<%=project.project_id%>>'+
+                    '<input type="hidden" name="selPegaBooms"  value=\''+JSON.stringify(selPegaBooms)+'\'>'+
+                    '<input type="hidden" name="selModules"  value=\''+JSON.stringify(selModules)+'\'>'+
+                    '<input type="hidden" name="selBoards"  value=\''+JSON.stringify(selBoards)+'\'>'+
+                 '</form>');
+            $('body').append(form);
+            $(form).submit();
+        });
+
+        /*$('select[id^=id_pegacolor-]').change(function(){
+//            $(this).css('backgroundColor',$('option:selected',this).css('backgroundColor'));
+            var id = "#" + $(this).attr('id');
+            var selected = $("option:selected", id);
+            $(id).removeClass().addClass(selected[0].className);
+        });*/
+
+        $('input[id^=id_pegaboom-qty-]').change(function(){
+            var qty = $(this).val();
+            var index = $(this).attr('index');
+            var price =  $.getPrice(qty, index);
+            $('#total-price-'+ index).text(price*qty);
+        });
+
+        $('input[id^=id_nascent_qty-]').change(function(){
+            var qty = $(this).val();
+            var index = $(this).attr('index');
+            var price = $('#nascent-price-'+index).text();
+
+            $('#nascent-total-price-'+ index).text(price*qty);
+        });
+
+        $('input[id^=id_greenboard_qty-]').change(function(){
+            var qty = $(this).val();
+            var index = $(this).attr('index');
+            var price = $('#greenboard-price-'+index).text();
+
+            $('#greenboard-total-price-'+ index).text(price*qty);
+        });
+
+        $.createPegaBoomJsonFromTable = function(){
+            var quote = <%- JSON.stringify(quoteJson) %>;
+            var quoteUnits = [];
+            for(var i=0;i<quote.length;i++){
+                var qty = $('#id_pegaboom-qty-'+i).val();
+                if(qty <= 0){
+                    continue;
+                }
+
+                var row = {};
+                var price = $.getPrice(qty, i);
+                row.name = quote[i]['product_name'];
+                row.price = price;
+                row.qty = qty;
+                //row.color =$('#id_pegacolor-'+i).css("background-color").colorHex();
+                row.color = $('#id_pegacolor-'+i).find("option:selected").text();
+                quoteUnits.push(row);
+            }
+            return quoteUnits;
+        }
+
+        $.createModuleJsonFromTable = function(){
+            var module = <%- JSON.stringify(nascents) %>;
+            var addModule = [];
+            for(var i=0;i<module.length;i++){
+                var qty = $('#id_nascent_qty-'+i).val();
+                if(qty <= 0){
+                    continue;
+                }
+                var row = {};
+//                var price = $('#nascent-price-'+i).text();
+                row.id = module[i]['nascent_id'];
+//                row.price = price;
+                row.qty = qty;
+                addModule.push(row);
+            }
+            return addModule;
+        }
+
+        $.createBoardJsonFromTable = function(){
+            var greenboardStr = <%- JSON.stringify(greenboardJson) %>;
+            var greenBoards = [];
+            for(var i=0;i<greenboardStr.length;i++){
+                var qty = $('#id_greenboard_qty-'+i).val();
+                if(qty <= 0){
+                    continue;
+                }
+                var row = {};
+//                var price = $('#greenboard-price-'+i).text();
+                row.id = greenboardStr[i]['greenboard_id'];
+//                row.price = price;
+                row.qty = qty;
+                greenBoards.push(row);
+            }
+            return greenBoards;
+        }
+
+        $.getPrice = function(qty, index){
+            var price = 0;
+            if(qty>0 && qty<=9){
+                price = $('#price1-'+index).text();
+            }else if(qty>=10 && qty <= 49){
+                price = $('#price2-'+index).text();
+            }else if(qty>=50 && qty <= 100){
+                price = $('#price3-'+index).text();
+            }else if(qty>=101 && qty <= 499){
+                price = $('#price4-'+index).text();
+            }else{
+                price = $('#price5-'+index).text();
+            }
+            return price;
+        }
+
+
+        $('input[type=file]').change(function() {
+            if(this.files.length == 0)
+                return;
+            var file = this.files[0];
+            var formData = new FormData();
+            formData.append('projectImage', file);
+            $.ajax({
+                url:'/orders/uploadProjectImage?projectID=<%=project.project_id%>' ,
+                type:'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data){
+                    $('#uploadImageText').text("Change Image");
+                    $("#uploadImage").attr("src","../" +data);
+                }
+            });
+
+        });
+
+        $("#collapsePanal").on("hide.bs.collapse", function(){
+            $("#collapseIcon").removeClass('glyphicon glyphicon-collapse-up');
+            $("#collapseIcon").addClass('glyphicon glyphicon-collapse-down');
+        });
+        $("#collapsePanal").on("show.bs.collapse", function(){
+            $("#collapseIcon").removeClass('glyphicon glyphicon-collapse-down');
+            $("#collapseIcon").addClass('glyphicon glyphicon-collapse-up');
+        });
+
+    });
+
+//    function colorChange(obj){
+//        alert(obj.id);
+//    }
+
+    function downloadCadFile(owner, fileDir, fileName){
+        var save = document.createElement('a');
+        var dir = owner == 1? "" : "admin/";
+        save.href = "../" + dir + fileDir + "/" + fileName;
+        save.target = '_blank';
+        save.download = fileName||'unknown';
+        var event = document.createEvent('MouseEvents');
+        event.initEvent('click', true, true);
+        save.dispatchEvent(event);
+        (window.URL || window.webkitURL).revokeObjectURL(save.href);
+    }
+
+    //String.prototype.colorHex = function(){
+        //var that = this;
+        //if(/^(rgb|RGB)/.test(that)){
+        //    var aColor = that.replace(/(?:\(|\)|rgb|RGB)*/g,"").split(",");
+        //    var strHex = "#";
+        //    for(var i=0; i<aColor.length; i++){
+        //        var hex = Number(aColor[i]).toString(16);
+        //        if(hex === "0"){
+        //            hex += hex;
+        //        }
+        //        strHex += hex;
+        //    }
+        //    if(strHex.length !== 7){
+        //        strHex = that;
+        //    }
+        //    return strHex;
+        //}else if(reg.test(that)){
+        //    var aNum = that.replace(/#/,"").split("");
+        //    if(aNum.length === 6){
+        //        return that;
+        //    }else if(aNum.length === 3){
+        //        var numHex = "#";
+        //        for(var i=0; i<aNum.length; i+=1){
+        //           numHex += (aNum[i]+aNum[i]);
+        //        }
+        //        return numHex;
+        //    }
+        //}else{
+        //    return that;
+        //}
+    //};
+
+</script>
+<style type='text/css'>
+    .table th{
+        text-align: center;
+    }
+    .table td{
+        vertical-align: middle !important;
+    }
+</style>
+<div>
+    <strong style="color:Silver;font-size: xx-large;">Order Units</strong>
+    <p style="color:Silver;font-size:x-large;float: right;" >
+        Questions?<a href="#">Contact Us</a>
+    </p>
+</div>
+<br/><br/><br/>
+
+<div class="progressbar_container">
+    <ul class="progressbar">
+        <li class="active">Setup Project</li>
+        <li class="active">Download CAD Kit</li>
+        <li class="active">Submit Your Project</li>
+        <li class="active">Review Feedback</li>
+        <li class="active">Order Units</li>
+        <li>Sell Your Product</li>
+        <li>View Sales Stats</li>
+    </ul>
+</div>
+    </br</br>
+
+    <div class="row" >
+        <div class="col-lg-6 col-md-6 col-xs-6" style="padding-right: 40px">
+            <div>
+                <p class="project-title"><B>Project Name:</B><p class="project-value"><%=project.project_name%></p></p>
+            </div>
+            <br><br>
+            <div>
+                <p class="project-title"><a data-toggle="collapse" href="#collapsePanal" style="color:silver">
+                        <span id="collapseIcon" class="glyphicon glyphicon-collapse-down" ></span>
+                        <B>History of CAD files (click to expand or collapse)</B></a>
+                </p>
+                <div id="collapsePanal" class="panel-collapse collapse">
+                    <%
+                    var cur, prev;
+                    for(var i=0;i<uploadFiles.length;i++){
+                        cur = uploadFiles[i];
+//                        next = uploadFiles[i];
+//                        prev = uploadFiles[i];
+                    if(i == 0){%>
+                    <p class="cadhistoryp">I submitted on <%=cur.upload_time%>:</p>
+                    <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                    cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                    <%}else{
+                        prev = uploadFiles[i-1];
+                    if(cur.upload_mills != prev.upload_mills){
+                    if(cur.owner == 1){%>
+                    <p class="cadhistoryp">I submitted on <%=cur.upload_time%>:</p>
+                    <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                    cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                    <%}else {%>
+                    <p class="cadhistoryp">Admin submitted on <%=cur.upload_time%>:</p>
+                    <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                    cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                    <%}%>
+
+                    <%}else{%>
+                    <a href="javascript:void(0);" onclick="downloadCadFile('<%=cur.owner%>','<%=cur.user_uid+ "_" + cur.project_id + "/" +
+                    cur.upload_mills%>', '<%=cur.file_name%>');" class="cadhistorya"><%=cur.file_name%></a>
+                    <%}
+                    }
+                    }%>
+                </div>
+            </div>
+            <br><br>
+            <div>
+                <p class="project-title"><B>Recommended SNAP: </B><p class="project-value"><%=snapName%></p></p>
+            </div>
+            <br><br>
+            <div>
+                <p class="project-title"><B>Modules:</B>
+                <p id="nascentModules" class="project-value">
+                    <%for(var i=0;i<nascents.length;i++){%>
+                    <%=nascents[i].nascent_name%>, &nbsp;
+                    <%}%>
+                </p>
+                </p>
+            </div>
+            <br><br>
+        </div>
+
+        <div class="col-lg-6 col-md-6 col-xs-6" style="padding-left: 40px;">
+            <div class="row div-rectangle-shadow" style="width:100% ;margin-top: 20px;">
+                <div class="col-lg-6 col-md-6 col-xs-6" style="text-align: center">
+                    <img id="uploadImage" src="../<%if(project.project_image != null&&project.project_image!=''){%><%=project.user_uid+ "_" + project.project_id+"/"+project.project_image%><%}%> "
+                         class="img-responsive" style="width: 90%;height: 180px;margin-left: 5%;">
+                    <!--<button class="file-upload btn btn-default">-->
+                        <!--<input type="file" class="file-input" accept="image/png,image/jpeg,image/jpg">-->
+                        <!--<span id="uploadImageText">Upload Image</span>-->
+                    <!--</button>-->
+                    <div class="btn btn-default" style="margin-top: 10px"><span id="uploadImageText">Upload Image</span>
+                        <input type="file" accept=".png,.jpeg,.jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0;">
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-xs-6" >
+                    <p style="color: silver;font-size: 40px;margin-top: 10px;"><%=diffDay%></p>
+                    <p style="color: silver;font-size: 20px;margin-top: 20px;">Days Left to Buy at this Price</p>
+                    <p style="color: silver;font-size: 18px;margin-top: 20px;">All pricing indicated in this quotation is valid through <%=day30%>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+<br/><br/><br/>
+<legend></legend>
+<br/><br/><br/>
+<div>
+    <table id="buyPegaBoomTable" class="table table-striped table-bordered table-hover" >
+        <caption style="color:Silver;font-size: x-large">Buy Units</caption>
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>1-9</th>
+                <th>10-49</th>
+                <th>50-100</th>
+                <th>101-499</th>
+                <th>500+</th>
+                <th>Color</th>
+                <th>Price</th>
+                <th>Qty.</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <%for(var i=0;i<quoteJson.length;i++){%>
+            <tr>
+                <td><%=quoteJson[i]['product_name']%></td>
+                <td ><span>$<span id="price1-<%=i%>"><%=quoteJson[i]["1-9"]%></span></span></td>
+                <td ><span>$<span id="price2-<%=i%>"><%=quoteJson[i]["10-49"]%></span></span></td>
+                <td ><span>$<span id="price3-<%=i%>"><%=quoteJson[i]["50-100"]%></span></span></td>
+                <td ><span>$<span id="price4-<%=i%>"><%=quoteJson[i]["101-499"]%></span></span></td>
+                <td ><span>$<span id="price5-<%=i%>"><%=quoteJson[i]["500+"]%></span></span></td>
+                <td style="width: 60px"><select name="pegacolor-<%=i%>" id="id_pegacolor-<%=i%>"  >
+                        <option selected="selected">Spring Green</option>
+                        <option>Deep Purple</option>
+                        <option>Pastel Blue</option>
+                        <option>Electric Blue</option>
+                        <option>Sunset Orange</option>
+                        <option>Lime Green</option>
+                        <option>Lemon Yellow</option>
+                        <option>Fuji Red</option>
+                        <option>Pastel Purple</option>
+                        <option>Pastel Green</option>
+                        <option>Navy Blue</option>
+                        <option>Deep Red</option>
+                    </select></td>
+                <td><span>$<span id="total-price-<%=i%>">0</span></span></td>
+                <td style="width: 60px"><input type="text" id="id_pegaboom-qty-<%=i%>" index="<%=i%>"  onkeyup="value=value.replace(/[^\d]/g,'') " style="width: 60px" ></td>
+                <td style="width:100px;"><input type="button" id="add-cart-<%=i%>" value="ADD TO CART" ></td>
+            </tr>
+            <%}%>
+        </tbody>
+    </table>
+</div>
+<br/><br/><br/>
+<div>
+    <table id="buyModuleTable" class="table table-striped table-bordered table-hover" >
+        <caption style="color:Silver;font-size: x-large">Buy Additional Modules</caption>
+        <thead>
+        <tr>
+            <th>Module Name</th>
+            <th>Price(Each)</th>
+            <th>Total Price</th>
+            <th>Module Image</th>
+            <th>Qty.</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <%for(var i=0;i<nascents.length;i++){%>
+        <tr>
+            <td><a style="text-decoration: none; color: black; outline: 0 none; " tabindex="0" data-container="body" data-toggle="popover" data-placement="right" data-trigger="focus"
+                         data-content="<%=nascents[i]['nascent_desc']%>"><%=nascents[i]['nascent_name']%></a></td>
+            <td><span>$<span id="nascent-price-<%=i%>"><%=nascents[i]["nascent_price"]%></span></span></td>
+            <td><span>$<span id="nascent-total-price-<%=i%>">0</span></span></td>
+            <td align="center">
+                <img class="img-responsive" src="<%=nascents[i]['nascent_image']%>" style="width: 60px;height: 60px;margin: 5px;" ></td>
+            <td style="width: 60px"><input type="text" id="id_nascent_qty-<%=i%>" index="<%=i%>"  onkeyup="value=value.replace(/[^\d]/g,'') " style="width: 60px" ></td>
+            <td style="width:100px;"><input type="button" id="add-cart-<%=i%>" value="ADD TO CART" ></td>
+        </tr>
+        <%}%>
+        </tbody>
+    </table>
+</div>
+<br/><br/><br/>
+<div>
+    <table id="buyGreenBoardTable" class="table table-striped table-bordered table-hover" >
+        <caption style="color:Silver;font-size: x-large">Buy Green Boards for Development</caption>
+        <thead>
+        <tr>
+            <th>Green Board Name</th>
+            <th>Price(Each)</th>
+            <th>Total Price</th>
+            <th>Green Board Image</th>
+            <th>Qty.</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <%for(var i=0;i<greenboardJson.length;i++){%>
+        <tr>
+            <td><a style="text-decoration: none; color: black; outline: 0 none; " tabindex="0" data-container="body" data-toggle="popover" data-placement="right" data-trigger="focus"
+                   data-content="<%=greenboardJson[i]['greenboard_desc']%>"><%=greenboardJson[i]['greenboard_name']%></a></td>
+            <td><span>$<span id="greenboard-price-<%=i%>"><%=greenboardJson[i]["greenboard_price"]%></span></span></td>
+            <td><span>$<span id="greenboard-total-price-<%=i%>">0</span></span></td>
+            <td align="center">
+                <img class="img-responsive" src="<%=greenboardJson[i]['greenboard_image']%>" style="width: 60px;height: 60px;margin: 5px;" ></td>
+            <td style="width: 60px"><input type="text" id="id_greenboard_qty-<%=i%>" index="<%=i%>"  onkeyup="value=value.replace(/[^\d]/g,'') " style="width: 60px" ></td>
+            <td style="width:100px;"><input type="button" id="add-cart-<%=i%>" value="ADD TO CART" ></td>
+        </tr>
+        <%}%>
+        </tbody>
+    </table>
+</div>
+
+<legend style="margin-top: 40px"></legend>
+<div style="margin:0px auto;text-align: center;width:550px; margin-top: 80px;">
+    <button class="btn btn-default btn-lg" id="checkBtn" name="checkBtn" style="width: 200px">Check Out</button>
+</div>

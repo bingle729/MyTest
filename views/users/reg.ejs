@@ -1,0 +1,67 @@
+<script type="text/javascript">
+	$(function () {
+
+		$('#username').blur(function () {
+
+			if(!$('#username').val()){
+				return;
+			}
+			$.ajax({
+				url:'/users/userExist',
+				type:'POST',
+				data: {'username': $('#username').val()},
+				success: function (data) {
+					var msgCode = data.msgCode;
+					var msg = data.msgContent;
+					$('#userhint').text(msg);
+					if(msgCode == 1){
+						$('#username').val('');
+						$('#username').focus();
+					}
+				},
+				error: function (xhr, status, error) {
+					$('#userhint').text( error.message);
+				},
+			});
+		});
+	});
+</script>
+
+<form class="form-horizontal"  method="post">
+	<fieldset>
+		<legend>Register</legend>
+		<div class="control-group has-error" style="margin-top: 15px">
+			<label class="col-sm-2 control-label" for="username" style="text-align: right">Username: </label>
+			<div class="row">
+				<div class="col-xs-4">
+					<input type="text" class="form-control input-large" id="username" name="username">
+				</div>
+				<span class="col-xs help-block" id="userhint" name="userhint" color="#FF0000">Username, for login and display.</span>
+			</div>
+		</div>
+		<div class="control-group has-warning has-feedback" style="margin-top: 15px">
+			<label class="col-sm-2 control-label" for="password" style="text-align: right">Password: </label>
+			<div class="row">
+				<div class="col-xs-4">
+					<input type="password" class="form-control input-large" id="password" name="password">
+				</div>
+			</div>
+		</div>
+		<div class="control-group" style="margin-top: 15px">
+			<label class="col-sm-2 control-label" for="password-repeat" style="text-align: right">Confirm: </label>
+			<div class="row">
+				<div class="col-xs-4">
+					<input type="password" class="form-control input-large" id="password-repeat" name="password-repeat">
+				</div>
+			</div>
+		</div>
+
+		<div class="form-group" style="margin-top: 20px; padding: 20px; background-color: #f1f1f1">
+			<div class="col-sm-offset-2 col-sm-10">
+				<button type="submit" class="btn btn-primary">Register</button>
+			</div>
+		</div>
+	</fieldset>
+</form>
+
+
